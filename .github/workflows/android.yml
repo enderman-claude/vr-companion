@@ -1,63 +1,67 @@
-name: Android APK
-
+name: build-apk
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
   apk:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Install Android SDK packages
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-      - name: Build debug APK
-        working-directory: android
-        run: gradle :app:assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: vr-companion-debug-apk
-          path: android/app/build/outputs/apk/debug/*.apk
 
-  release-apk:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
+
       - uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.9'
-      - name: Decode signing keystore
+          gradle-version: "8.7"
+
+      - name: Decode release keystore (if the CAMERA_ secrets are set)
+        shell: bash
         env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          CAMERA_KEYSTORE_B64: ${{ secrets.CAMERA_KEYSTORE_B64 }}
         run: |
-          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
-          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
-      - name: Build signed release APK
+          if [ -n "$CAMERA_KEYSTORE_B64" ]; then
+            echo "$CAMERA_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/camera-release.jks"
+            echo "CAMERA_KEYSTORE_PATH=$RUNNER_TEMP/camera-release.jks" >> "$GITHUB_ENV"
+          fi
+
+      - name: Assemble APK (target SDK 34)
+        shell: bash
         working-directory: android
         env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: gradle :app:assembleRelease --no-daemon
-      - name: Remove keystore
+          CAMERA_KEYSTORE_PASSWORD: ${{ secrets.CAMERA_KEYSTORE_PASSWORD }}
+          CAMERA_KEY_ALIAS: ${{ secrets.CAMERA_KEY_ALIAS }}
+          CAMERA_KEY_PASSWORD: ${{ secrets.CAMERA_KEY_PASSWORD }}
+        run: |
+          mkdir -p ../out
+          gradle --no-daemon assembleDebug assembleRelease 2>&1 | tee ../gradle.log
+          cp app/build/outputs/apk/debug/app-debug.apk ../out/vr-companion-debug.apk
+          cp app/build/outputs/apk/release/app-release.apk ../out/vr-companion-release.apk
+
+      - name: Report build errors
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import re
+          t = open("gradle.log", errors="replace").read()
+          lines = [l for l in t.splitlines() if re.search(r"error|FAILED|wrong|Could not|not found|Unresolved|cannot find|What went", l, re.I)]
+          msg = "\n".join(lines[:40]) or t[-3000:]
+          msg = msg.replace("%","%25").replace("\r","%0D").replace("\n","%0A")
+          print("::error title=gradle::" + msg[:3500])
+          PY
+
+      - name: List APK contents
         if: always()
-        run: rm -f "$RUNNER_TEMP/release.jks"
+        run: |
+          for APK in out/*.apk; do
+            L=$(unzip -l "$APK" | grep -E "AndroidManifest|classes.dex" | awk '{printf "%s %s%%0A", $1, $4}')
+            echo "::notice title=$(basename "$APK")::$L"
+          done
+
       - uses: actions/upload-artifact@v4
         with:
-          name: vr-companion-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          name: vr-companion-apk
+          path: out/*.apk
