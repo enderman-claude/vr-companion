@@ -2,6 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
+// Release signing comes from the CI environment. Without it, release builds stay unsigned.
+def keystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+
 android {
     namespace 'com.enderman.vrcompanion'
     compileSdk 34
@@ -14,9 +17,23 @@ android {
         versionName '0.1.0'
     }
 
+    signingConfigs {
+        release {
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (keystorePath) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 
