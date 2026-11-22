@@ -142,7 +142,7 @@ std::string cpu_json() {
         }
     }
     std::ostringstream out;
-    out << "{\"logical_cores\":" << cores << ",\"model\":" << (model.empty() ? "null" : quoted(model)) << "}";
+    out << "{\"logical_cores\":" << cores << ",\"model\":" << (model.empty() ? std::string("null") : quoted(model)) << "}";
     return out.str();
 }
 
@@ -176,8 +176,8 @@ std::string thermal_json() {
         const std::string temp = trim(read_text(base + "temp"));
         if (!first) out += ",";
         first = false;
-        out += "{\"zone\":" + quoted(z) + ",\"type\":" + quoted(type.empty() ? "unavailable" : type) +
-               ",\"temp_mC\":" + (temp.empty() ? "null" : temp) + "}";
+        out += "{\"zone\":" + quoted(z) + ",\"type\":" + quoted(type.empty() ? std::string("unavailable") : type) +
+               ",\"temp_mC\":" + (temp.empty() ? std::string("null") : temp) + "}";
     }
     return out + "]";
 }
