@@ -19,3 +19,9 @@ Living document. Update at the end of every work session.
 
 ## Session log
 - Session 1: repo, license, CMake skeleton, CI, stub main.
+
+## Build and signing
+- The APK build copies camera-app's pipeline: JDK 17, Gradle 8.7, Kotlin DSL, AGP 8.5.2, the keystore decoded from CAMERA_KEYSTORE_B64 into the runner's temp folder, debug and release APKs, error annotations, and an APK listing.
+- Signing secrets (CAMERA_KEYSTORE_B64, CAMERA_KEYSTORE_PASSWORD, CAMERA_KEY_ALIAS, CAMERA_KEY_PASSWORD) are the shared identity for new Android apps, copied from enderman-claude/camera-app-signing.
+- Lesson: set secrets with `printf '%s' "$VALUE" | gh secret set NAME`. A trailing newline in a password breaks the keystore read.
+- Quest: manifest includes the com.oculus.intent.category.VR category. Android XR needs its own check later.
