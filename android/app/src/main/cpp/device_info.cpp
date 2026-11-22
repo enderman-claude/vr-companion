@@ -35,7 +35,7 @@ std::string json_escape(const std::string& s) {
     return out;
 }
 
-std::string quoted(const std::string& s) {
+std::string json_string(const std::string& s) {
     return "\"" + json_escape(s) + "\"";
 }
 
@@ -142,7 +142,7 @@ std::string cpu_json() {
         }
     }
     std::ostringstream out;
-    out << "{\"logical_cores\":" << cores << ",\"model\":" << (model.empty() ? std::string("null") : quoted(model)) << "}";
+    out << "{\"logical_cores\":" << cores << ",\"model\":" << (model.empty() ? std::string("null") : json_string(model)) << "}";
     return out.str();
 }
 
@@ -176,7 +176,7 @@ std::string thermal_json() {
         const std::string temp = trim(read_text(base + "temp"));
         if (!first) out += ",";
         first = false;
-        out += "{\"zone\":" + quoted(z) + ",\"type\":" + quoted(type.empty() ? std::string("unavailable") : type) +
+        out += "{\"zone\":" + json_string(z) + ",\"type\":" + json_string(type.empty() ? std::string("unavailable") : type) +
                ",\"temp_mC\":" + (temp.empty() ? std::string("null") : temp) + "}";
     }
     return out + "]";
@@ -189,11 +189,11 @@ std::string collect_device_info_json() {
     std::ostringstream out;
     out << "{\"gpu\":";
     if (gpu.ok) {
-        out << "{\"name\":" << quoted(gpu.name)
-            << ",\"type\":" << quoted(gpu.device_type)
-            << ",\"vulkan_api\":" << quoted(gpu.api_version)
-            << ",\"driver_version\":" << quoted(gpu.driver_version)
-            << ",\"vendor_id\":" << quoted(gpu.vendor_id)
+        out << "{\"name\":" << json_string(gpu.name)
+            << ",\"type\":" << json_string(gpu.device_type)
+            << ",\"vulkan_api\":" << json_string(gpu.api_version)
+            << ",\"driver_version\":" << json_string(gpu.driver_version)
+            << ",\"vendor_id\":" << json_string(gpu.vendor_id)
             << ",\"device_local_bytes\":" << gpu.device_local_bytes
             << ",\"max_image_2d\":" << gpu.max_image_2d
             << ",\"device_count\":" << gpu.device_count << "}";
