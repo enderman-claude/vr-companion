@@ -32,3 +32,8 @@ Living document. Update at the end of every work session.
 - CPU: /proc/cpuinfo (logical cores, model). Memory: /proc/meminfo (MemTotal). Thermal: /sys/class/thermal (readable zones only).
 - Third-party code: none. Vulkan and the Android log come from the NDK, which is platform SDK, not an open source dependency. The open-source-reuse skill's approval step applies to any future third-party library (for example, a JSON library).
 - Not verified: the JSON values on a real Quest or phone. CI only proves the native module compiles and links.
+
+## Target devices (owner decision, session 6)
+- The companion app runs on the headset only: Meta Quest (Horizon OS) and adjacent headsets (Android XR). It is not a phone app, the same way Steam Link runs on the headset and not on the gaming PC.
+- Manifest: android.hardware.vr.headtracking is required, and the only launch category is com.oculus.intent.category.VR, so stores hide it from phones. The LAUNCHER category was removed.
+- To verify before release: Horizon OS and Android XR documentation for the exact store filter and any extra category they require.
