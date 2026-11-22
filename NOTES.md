@@ -37,3 +37,8 @@ Living document. Update at the end of every work session.
 - The companion app runs on the headset only: Meta Quest (Horizon OS) and adjacent headsets (Android XR). It is not a phone app, the same way Steam Link runs on the headset and not on the gaming PC.
 - Manifest: android.hardware.vr.headtracking is required, and the only launch category is com.oculus.intent.category.VR, so stores hide it from phones. The LAUNCHER category was removed.
 - To verify before release: Horizon OS and Android XR documentation for the exact store filter and any extra category they require.
+
+## Streaming transport (owner decision, session 6)
+- Approved: ALVR (MIT), v20.14.1, commit a9f6542fa507a841f40ab4f3fcb531427cd02550. Provenance in THIRD_PARTY_NOTICES.md; license text in third_party/licenses/alvr-LICENSE.txt.
+- Not yet integrated. Next: check whether a newer tag exists, then wire the headset-side client into the companion build, and keep any change in a separate patch.
+- Rejected for now: Moonlight and Sunshine (GPL-3.0), because they would force the companion to GPL.
