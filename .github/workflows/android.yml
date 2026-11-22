@@ -14,6 +14,12 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Install NDK and CMake for the native module
+        shell: bash
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;26.1.10909125" "cmake;3.22.1" > /dev/null
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
